@@ -1,0 +1,11 @@
+{
+  "train_size": 111,
+  "val_size": 60,
+  "test_size": 221,
+  "split_seed": 0,
+  "train_file": "data/pupa/train.jsonl",
+  "val_file": "data/pupa/val.jsonl",
+  "test_file": "data/pupa/test.jsonl",
+  "all_data_file": null,
+  "dry_run": false
+}

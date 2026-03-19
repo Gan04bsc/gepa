@@ -4,6 +4,7 @@
 import hashlib
 import json
 import os
+import time
 from collections import defaultdict
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
@@ -296,6 +297,23 @@ class GEPAState(Generic[RolloutOutput, DataId]):
         tmp_path = target_path + ".tmp"
         with open(tmp_path, "w") as f:
             json.dump(data, f, indent=2, default=json_default)
+        self._replace_with_retry(tmp_path, target_path)
+
+    @staticmethod
+    def _replace_with_retry(tmp_path: str, target_path: str, retries: int = 5, delay_seconds: float = 0.1) -> None:
+        """Best-effort replace for platforms where transient file locks can occur."""
+        last_err: Exception | None = None
+        for attempt in range(retries):
+            try:
+                os.replace(tmp_path, target_path)
+                return
+            except PermissionError as err:
+                last_err = err
+                if attempt == retries - 1:
+                    break
+                time.sleep(delay_seconds * (attempt + 1))
+        if last_err is not None:
+            raise last_err
         os.replace(tmp_path, target_path)
 
     def save(self, run_dir: str | None, *, use_cloudpickle: bool = False) -> None:
@@ -332,7 +350,7 @@ class GEPAState(Generic[RolloutOutput, DataId]):
                     "Install it with: pip install gepa[full]  or  pip install cloudpickle"
                 ) from e
             raise
-        os.replace(tmp_path, target_path)
+        self._replace_with_retry(tmp_path, target_path)
 
         # Save run log and candidates as human-readable JSON
         if self.full_program_trace:

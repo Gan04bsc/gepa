@@ -1,0 +1,21 @@
+{
+  "input_csv": "PUPA_New.csv",
+  "split_seed": 0,
+  "source_rows": 664,
+  "requested_sizes": {
+    "train": 111,
+    "val": 60,
+    "test": 221
+  },
+  "written_sizes": {
+    "train": 111,
+    "val": 60,
+    "test": 221,
+    "unused": 272
+  },
+  "output_files": {
+    "train_file": "data\\pupa\\train.jsonl",
+    "val_file": "data\\pupa\\val.jsonl",
+    "test_file": "data\\pupa\\test.jsonl"
+  }
+}
