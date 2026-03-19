@@ -1,0 +1,5 @@
+{
+    "redacted_request": "Private user query:\n\u4e2d\u8bd1\u82f1\uff1a\u9999\u6e2f\u7406\u5de5\u5927\u5b66\u9996\u5e2d\u7814\u7a76\u5458\u3001\u5e7f\u4e1c\u79d1\u6280\u5b66\u9662\u5ba2\u5ea7\u6559\u6388\n\nRewritten request for external assistant:\nTranslate the following Chinese title into English: \"Chief Researcher at The Hong Kong Polytechnic University, Visiting Professor at Guangdong University of Science and Technology\"",
+    "untrusted_response": "The translation of the title \"\u9999\u6e2f\u7406\u5de5\u5927\u5b66\u9996\u5e2d\u7814\u7a76\u5458\u3001\u5e7f\u4e1c\u79d1\u6280\u5b66\u9662\u5ba2\u5ea7\u6559\u6388\" into English is:  \n**\"Chief Researcher at The Hong Kong Polytechnic University, Visiting Professor at Guangdong University of Science and Technology.\"**",
+    "final_response": "\"Chief Researcher at The Hong Kong Polytechnic University, Visiting Professor at Guangdong University of Science and Technology.\""
+}

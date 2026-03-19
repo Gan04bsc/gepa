@@ -1,0 +1,44 @@
+[
+  {
+    "iteration": 3,
+    "module": "craft_redacted_request",
+    "feedback_categories": [
+      "privacy_or_pii"
+    ],
+    "num_reflective_records": 3
+  },
+  {
+    "iteration": 7,
+    "module": "craft_redacted_request",
+    "feedback_categories": [
+      "privacy_or_pii"
+    ],
+    "num_reflective_records": 3
+  },
+  {
+    "iteration": 8,
+    "module": "respond_to_query",
+    "feedback_categories": [
+      "privacy_or_pii",
+      "response_quality"
+    ],
+    "num_reflective_records": 3
+  },
+  {
+    "iteration": 9,
+    "module": "craft_redacted_request",
+    "feedback_categories": [
+      "privacy_or_pii"
+    ],
+    "num_reflective_records": 3
+  },
+  {
+    "iteration": 10,
+    "module": "respond_to_query",
+    "feedback_categories": [
+      "privacy_or_pii",
+      "response_quality"
+    ],
+    "num_reflective_records": 3
+  }
+]

@@ -1,0 +1,5 @@
+{
+    "redacted_request": "Request for external assistant:\n\nWrite a paragraph about a health supplement product, including the link [https://bit.ly/3HZ9fMe]. Ensure the paragraph does not include any personal information or direct identifiers.",
+    "untrusted_response": "Discover a natural way to support your overall well-being with our premium health supplement, designed to promote vitality and balance. Formulated with high-quality ingredients, this product is crafted to complement a healthy lifestyle. For more information, visit [https://bit.ly/3HZ9fMe].",
+    "final_response": "Discover a natural way to support your overall well-being with our premium health supplement, designed to promote vitality and balance. Formulated with high-quality ingredients, this product is crafted to complement a healthy lifestyle. For more information, visit [https://bit.ly/3HZ9fMe]."
+}

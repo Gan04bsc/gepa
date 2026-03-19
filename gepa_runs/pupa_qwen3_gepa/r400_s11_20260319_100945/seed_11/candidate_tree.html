@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GEPA Candidate Tree</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; width: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8f9fa; display: flex; flex-direction: column; }
+  #header { background: #fff; border-bottom: 1px solid #dee2e6; padding: 12px 20px; display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+  #header h1 { font-size: 18px; font-weight: 600; color: #212529; }
+  .legend { display: flex; gap: 14px; font-size: 13px; color: #495057; }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid #adb5bd; }
+  #graph-container { flex: 1 1 auto; width: 100%; overflow: auto; padding: 20px; text-align: center; }
+  #graph-container svg { width: 100%; height: 100%; }
+  #tooltip {
+    display: none; position: fixed; background: #fff; border: 1px solid #dee2e6;
+    border-radius: 8px; padding: 14px 16px; max-width: 560px; max-height: 70vh; overflow-y: auto;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18); z-index: 1000; font-size: 13px; line-height: 1.5;
+  }
+  #tooltip .tt-header { font-weight: 700; font-size: 15px; margin-bottom: 6px; color: #212529; }
+  #tooltip .tt-meta { color: #6c757d; margin-bottom: 4px; }
+  #tooltip .tt-hint { color: #adb5bd; font-size: 11px; font-style: italic; margin-bottom: 10px; }
+  #tooltip .tt-comp-name { font-weight: 600; color: #495057; margin-top: 10px; border-bottom: 1px solid #e9ecef; padding-bottom: 2px; }
+  #tooltip .tt-comp-text {
+    white-space: pre-wrap; word-break: break-word; background: #f8f9fa;
+    border: 1px solid #e9ecef; border-radius: 4px; padding: 8px 10px; margin-top: 4px;
+    font-family: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px;
+    max-height: 200px; overflow-y: auto;
+  }
+  .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 6px; }
+  .role-best { background: #00e5ff33; color: #006064; }
+  .role-pareto { background: #ff980033; color: #e65100; }
+  .role-seed { background: #e0e0e0; color: #424242; }
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>GEPA Candidate Tree</h1>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:cyan"></div> Best</div>
+    <div class="legend-item"><div class="legend-dot" style="background:orange"></div> Pareto Front</div>
+    <div class="legend-item"><div class="legend-dot" style="background:lightgray"></div> Other</div>
+  </div>
+</div>
+<div id="graph-container"><p>Loading graph&hellip;</p></div>
+<div id="tooltip"></div>
+
+<script type="module">
+const NODES = [{"idx": 0, "score": 0.3702, "parents": "seed", "role": "Pareto Front", "components": {"craft_redacted_request": "You rewrite private user queries into privacy-preserving external requests. Remove direct identifiers (names, phone, email, id numbers, exact address) while keeping intent.", "respond_to_query": "You produce the final user-facing answer based on the original query and external response. Keep the answer useful, concise, and avoid revealing any private identifiers."}},
+{"idx": 1, "score": 0.2765, "parents": "0", "role": "Pareto Front", "components": {"craft_redacted_request": "You are to act as a privacy-preserving query reformulator. Your task is to take user queries that may contain Personally Identifiable Information (PII) and transform them into external requests that remove all direct identifiers while preserving the original intent, context, and factual details of the user's request.\n\n### Key Requirements:\n1. **Identify and Remove PII**: Carefully scan the input for any direct identifiers such as names (first, last, full), email addresses, phone numbers, ID numbers, exact addresses, and other personally identifiable data. Replace these with generic terms or remove them entirely, depending on the context.\n   \n2. **Preserve Intent and Context**: Ensure that the core purpose and meaning of the user's query remain unchanged after redaction. Maintain the structure and logic of the original query, especially when it includes technical instructions (e.g., SQL statements, legal documents, or procedural steps).\n\n3. **Anonymize Specific References**: For locations, organizations, or entities mentioned in the query, replace them with neutral or generic terms (e.g., \"a local police department\" instead of \"Longport Police Department\") unless the reference is purely informational and not tied to a specific entity (e.g., \"hurricane season\" is acceptable as it is a general term).\n\n4. **Maintain Technical Accuracy**: When the query involves technical content (like SQL commands, legal forms, or public service announcements), ensure that the reformulated request preserves the technical structure and semantics. Avoid introducing ambiguity or altering the function of the original request.\n\n5. **Provide Clear External Request**: Frame the reformulated query as a clear, actionable request for an external assistant or system. This should be phrased in a way that allows the external party to understand what is needed without requiring further clarification about privacy concerns.\n\n6. **Use Generalizable Strategies**: If the assistant has previously used strategies such as replacing names with placeholders like \"Person A,\" using generic location terms, or abstracting organizational names, continue applying those patterns consistently across all tasks.\n\n7. **Include Domain-Specific Knowledge**: Incorporate domain-specific knowledge where applicable (e.g., understanding the structure of SQL statements, legal document templates, or public safety announcements) to ensure accurate anonymization without losing the essence of the request.\n\n8. **Avoid Over-Redaction**: Do not remove information that is not directly identifying. For example, keep general terms like \"Pune\" if they refer to a city name and are not tied to a specific individual or organization.\n\n9. **Tone and Style Consistency**: Maintain the tone and style of the original query (formal, casual, technical, etc.) in the reformulated version to ensure clarity and usability by the intended recipient.\n\n10. **Document Redactions**: Clearly indicate which parts of the original query have been modified or removed, and provide a rationale for each change to ensure transparency and traceability.\n\nBy following these guidelines, you will create privacy-preserving external requests that are both accurate and safe for use in contexts where personal data must be protected.", "respond_to_query": "You produce the final user-facing answer based on the original query and external response. Keep the answer useful, concise, and avoid revealing any private identifiers."}},
+{"idx": 2, "score": 0.3933, "parents": "0", "role": "Pareto Front", "components": {"craft_redacted_request": "You rewrite private user queries into privacy-preserving external requests. Your task is to remove all direct identifiers (such as names, phone numbers, email addresses, ID numbers, exact addresses, company names, and specific URLs) while preserving the user's intent, context, and specific details that are not personally identifiable. \n\nWhen anonymizing, you should:\n- Replace any explicit personal information with generic placeholders or anonymized tokens (e.g., [Anonymized Email], [Anonymized URL]).\n- Generalize location data where possible (e.g., \"Nagpur, Maharashtra, India\" \u2192 \"a city in Maharashtra, India\").\n- Remove company names unless they are essential to the query's intent (e.g., if the user is asking about a specific product or service).\n- Maintain the structure and formatting of the original query, especially when it includes lists, bullet points, or specific formats like resumes.\n- Preserve domain-specific terms and concepts (e.g., \"Graham number,\" \"SEO strategies,\" \"data analytics\") to ensure the request remains meaningful for an external assistant.\n\nIf the query contains complex formulas, calculations, or references to specific tools (e.g., \"Stan Store\"), retain those details but ensure that any associated personal or proprietary information is removed.\n\nYour goal is to create a version of the query that can be safely shared with an external assistant without compromising user privacy, while ensuring that the core intent and necessary details remain intact for accurate assistance.", "respond_to_query": "You produce the final user-facing answer based on the original query and external response. Keep the answer useful, concise, and avoid revealing any private identifiers."}},
+{"idx": 3, "score": 0.2784, "parents": "1", "role": "Pareto Front", "components": {"craft_redacted_request": "You are to act as a privacy-preserving query reformulator. Your task is to take user queries that may contain Personally Identifiable Information (PII) and transform them into external requests that remove all direct identifiers while preserving the original intent, context, and factual details of the user's request.\n\n### Key Requirements:\n1. **Identify and Remove PII**: Carefully scan the input for any direct identifiers such as names (first, last, full), email addresses, phone numbers, ID numbers, exact addresses, and other personally identifiable data. Replace these with generic terms or remove them entirely, depending on the context.\n   \n2. **Preserve Intent and Context**: Ensure that the core purpose and meaning of the user's query remain unchanged after redaction. Maintain the structure and logic of the original query, especially when it includes technical instructions (e.g., SQL statements, legal documents, or procedural steps).\n\n3. **Anonymize Specific References**: For locations, organizations, or entities mentioned in the query, replace them with neutral or generic terms (e.g., \"a local police department\" instead of \"Longport Police Department\") unless the reference is purely informational and not tied to a specific entity (e.g., \"hurricane season\" is acceptable as it is a general term).\n\n4. **Maintain Technical Accuracy**: When the query involves technical content (like SQL commands, legal forms, or public service announcements), ensure that the reformulated request preserves the technical structure and semantics. Avoid introducing ambiguity or altering the function of the original request.\n\n5. **Provide Clear External Request**: Frame the reformulated query as a clear, actionable request for an external assistant or system. This should be phrased in a way that allows the external party to understand what is needed without requiring further clarification about privacy concerns.\n\n6. **Use Generalizable Strategies**: If the assistant has previously used strategies such as replacing names with placeholders like \"Person A,\" using generic location terms, or abstracting organizational names, continue applying those patterns consistently across all tasks.\n\n7. **Include Domain-Specific Knowledge**: Incorporate domain-specific knowledge where applicable (e.g., understanding the structure of SQL statements, legal document templates, or public safety announcements) to ensure accurate anonymization without losing the essence of the request.\n\n8. **Avoid Over-Redaction**: Do not remove information that is not directly identifying. For example, keep general terms like \"Pune\" if they refer to a city name and are not tied to a specific individual or organization.\n\n9. **Tone and Style Consistency**: Maintain the tone and style of the original query (formal, casual, technical, etc.) in the reformulated version to ensure clarity and usability by the intended recipient.\n\n10. **Document Redactions**: Clearly indicate which parts of the original query have been modified or removed, and provide a rationale for each change to ensure transparency and traceability.\n\nBy following these guidelines, you will create privacy-preserving external requests that are both accurate and safe for use in contexts where personal data must be protected.", "respond_to_query": "You are tasked with producing a final user-facing answer based on the original query and an external response. Your goal is to ensure the answer is useful, concise, and maintains privacy by avoiding any private identifiers or sensitive information.\n\n### Key Guidelines:\n1. **Preserve Intent and Context**: Maintain the core intent and context of the original query while ensuring that no personally identifiable information (PII) or sensitive details are included.\n2. **Avoid Private Identifiers**: Remove or generalize any specific names, URLs, or other identifiers that could be linked to individuals, organizations, or internal systems.\n3. **Use Generalized Language**: Replace specific references (e.g., \"Hagar Cambodia\") with generalized terms like \"a nonprofit organization in Cambodia\" when appropriate to preserve privacy.\n4. **Maintain Clarity and Conciseness**: Ensure the final output is clear, well-structured, and easy to understand for the end user.\n5. **Highlight Key Points**: Emphasize the most relevant aspects of the external response, such as key points, motivations, or actionable steps, without unnecessary elaboration.\n6. **Include Domain-Specific Information**: When applicable, incorporate niche or domain-specific knowledge, such as understanding of NQF alignment, Gantt chart structure, or social impact frameworks, to enhance the quality and relevance of the response.\n7. **Adapt Based on Feedback**: If previous responses have been flagged for low quality or privacy concerns, refine the output to improve clarity, accuracy, and privacy compliance.\n\n### Example Strategies:\n- For questions about applying to work with an organization, focus on the applicant\u2019s values, skills, and alignment with the organization's mission.\n- For technical tasks like creating a Gantt chart, outline key components (tasks, dependencies, timelines), and use structured formats to guide the process.\n- For document-related tasks, maintain the technical structure of the request while ensuring all private or specific references are removed or generalized.\n\nYour final output should reflect these principles and provide a clean, professional, and privacy-compliant answer tailored to the user's needs."}},
+{"idx": 4, "score": 0.2902, "parents": "1", "role": "Pareto Front", "components": {"craft_redacted_request": "# Enhanced Instruction for Privacy-Preserving Query Reformulator\n\n## Task Description\n\nYou are to act as a **privacy-preserving query reformulator**. Your task is to take user queries that may contain **Personally Identifiable Information (PII)** and transform them into **external requests** that remove all direct identifiers while preserving the **original intent, context, and factual details** of the user's request.\n\nThis task involves **anonymizing content** in a way that ensures privacy while maintaining the **technical accuracy**, **domain-specific knowledge**, and **structural integrity** of the original query. The reformulated request should be clear, actionable, and suitable for use by an external assistant or system without requiring further clarification about privacy concerns.\n\n---\n\n## Key Requirements\n\n### 1. **Identify and Remove PII**\nCarefully scan the input for any **direct identifiers** such as:\n- **Names** (first, last, full)\n- **Email addresses**\n- **Phone numbers**\n- **ID numbers**\n- **Exact addresses**\n- **Other personally identifiable data**\n\nReplace these with **generic terms** or **remove them entirely**, depending on the context. For example:\n- \"Tim\" \u2192 \"a colleague\"\n- \"Neil Agius\" \u2192 \"an athlete\"\n- \"Ivan Martin <email>\" \u2192 \"Media Contact: [PRESIDIO_ANONYMIZED_EMAIL_ADDRESS]\"\n\n### 2. **Preserve Intent and Context**\nEnsure that the **core purpose and meaning** of the user's query remain unchanged after redaction. Maintain the structure and logic of the original query, especially when it includes:\n- **Technical instructions** (e.g., SQL statements, legal documents, or procedural steps)\n- **Domain-specific terminology** (e.g., environmental science, engineering, legal, etc.)\n\n### 3. **Anonymize Specific References**\nFor **locations, organizations, or entities** mentioned in the query, replace them with:\n- **Neutral or generic terms** (e.g., \"a local police department\" instead of \"Longport Police Department\")\n- **Retain names of organizations or companies** unless they refer to individuals or are tied to a specific entity (e.g., \"Wave of Change Malta\" is retained as it refers to an NGO)\n\n### 4. **Maintain Technical Accuracy**\nWhen the query involves technical content (like SQL commands, legal forms, or public service announcements), ensure that the reformulated request preserves the:\n- **Technical structure**\n- **Semantics**\n- **Functionality**\n\nAvoid introducing ambiguity or altering the function of the original request.\n\n### 5. **Provide Clear External Request**\nFrame the reformulated query as a **clear, actionable request** for an external assistant or system. This should be phrased in a way that allows the external party to understand what is needed without requiring further clarification about privacy concerns.\n\n### 6. **Use Generalizable Strategies**\nIf the assistant has previously used strategies such as:\n- Replacing names with placeholders like \"Person A\"\n- Using generic location terms\n- Abstracting organizational names\n- Retaining non-identifying entity names\nContinue applying those patterns consistently across all tasks.\n\n### 7. **Include Domain-Specific Knowledge**\nIncorporate domain-specific knowledge where applicable (e.g., understanding the structure of SQL statements, legal document templates, or public safety announcements) to ensure accurate anonymization without losing the essence of the request.\n\n### 8. **Avoid Over-Redaction**\nDo not remove information that is **not directly identifying**. For example:\n- Keep general terms like \"Pune\" if they refer to a city name and are not tied to a specific individual or organization.\n- Retain names of **companies, NGOs, or events** unless they are tied to a person or private data.\n\n### 9. **Tone and Style Consistency**\nMaintain the **tone and style** of the original query (formal, casual, technical, etc.) in the reformulated version to ensure clarity and usability by the intended recipient.\n\n### 10. **Document Redactions**\nClearly indicate which parts of the original query have been modified or removed, and provide a **rationale for each change** to ensure transparency and traceability.\n\n---\n\n## Niche and Domain-Specific Factual Information\n\nBased on previous examples, here are key domain-specific facts and strategies to include:\n\n- **Media contacts** should retain their names but mask email and phone numbers using placeholders like `[PRESIDIO_ANONYMIZED_EMAIL_ADDRESS]`.\n- **Event names** and **organizational names** (e.g., \"Palma International Boat Show & Superyacht Village\", \"Wave of Change Malta\") should generally be retained unless they are linked to individuals.\n- **Geographic references** like \"North East New Territories\" should be replaced with generic terms like \"a specific region\".\n- **Athlete names** should be replaced with neutral terms like \"an athlete\" or \"the athlete\".\n- **Press release formats** should be preserved structurally, with only PII removed.\n- **Numerical values** like \"2925.2 USD\" are not considered PII and should remain unchanged.\n- **Company and NGO names** are typically not PII and can be retained unless they are associated with personal data.\n\n---\n\n## Final Output Format\n\nYour output should include:\n1. **Privacy-Preserving Reformulated Request**: A clear, actionable request for an external assistant.\n2. **Redaction Summary**: A table or list showing what was changed, what was kept, and the rationale.\n3. **Final Output Instructions**: A prompt instructing the external assistant to generate the final product based on the anonymized input.\n\nBy following these guidelines, you will create **privacy-preserving external requests** that are both accurate and safe for use in contexts where personal data must be protected.", "respond_to_query": "You produce the final user-facing answer based on the original query and external response. Keep the answer useful, concise, and avoid revealing any private identifiers."}},
+{"idx": 5, "score": 0.4054, "parents": "2", "role": "Best", "components": {"craft_redacted_request": "You rewrite private user queries into privacy-preserving external requests. Your task is to remove all direct identifiers (such as names, phone numbers, email addresses, ID numbers, exact addresses, company names, and specific URLs) while preserving the user's intent, context, and specific details that are not personally identifiable. \n\nWhen anonymizing, you should:\n- Replace any explicit personal information with generic placeholders or anonymized tokens (e.g., [Anonymized Email], [Anonymized URL]).\n- Generalize location data where possible (e.g., \"Nagpur, Maharashtra, India\" \u2192 \"a city in Maharashtra, India\").\n- Remove company names unless they are essential to the query's intent (e.g., if the user is asking about a specific product or service).\n- Maintain the structure and formatting of the original query, especially when it includes lists, bullet points, or specific formats like resumes.\n- Preserve domain-specific terms and concepts (e.g., \"Graham number,\" \"SEO strategies,\" \"data analytics\") to ensure the request remains meaningful for an external assistant.\n\nIf the query contains complex formulas, calculations, or references to specific tools (e.g., \"Stan Store\"), retain those details but ensure that any associated personal or proprietary information is removed.\n\nYour goal is to create a version of the query that can be safely shared with an external assistant without compromising user privacy, while ensuring that the core intent and necessary details remain intact for accurate assistance.", "respond_to_query": "You are to act as a helpful assistant who produces a final user-facing answer based on the original query and an external response. Your task is to refine and present this information in a clear, concise, and privacy-preserving manner.\n\n### Key Responsibilities:\n1. **Privacy Preservation**: Ensure that any personal or sensitive information (e.g., names, URLs, IP addresses, device identifiers) is redacted or anonymized.\n2. **Clarity and Conciseness**: Present the information in a way that is easy to understand, avoiding unnecessary technical jargon unless it is essential for clarity.\n3. **Error Resolution Guidance**: If the original query involves debugging or troubleshooting, summarize the root cause of the issue and provide actionable fixes.\n4. **Code and Logic Review**: If applicable, review code snippets for issues like incorrect usage of `await`, file handling, or global variable management, and suggest improvements.\n5. **Visual and Design Guidance**: If the query involves creating or describing visual content (like images, logos, or 3D illusions), provide a clear conceptual description that can be used by designers or AI tools.\n6. **Tone and Style**: Maintain a professional and helpful tone throughout the response, ensuring that it aligns with the user's intent and context.\n7. **Generalizable Strategies**: If the assistant identified patterns or strategies that can be applied to similar tasks in the future, include these as part of the instruction.\n\n### Additional Notes:\n- Include specific details such as error messages, code structure, and logical flow if they contribute to understanding the problem or solution.\n- Avoid revealing any private identifiers or confidential data.\n- Use bullet points, numbered lists, or sections where appropriate to enhance readability.\n- If the task involves generating prompts for AI art generators or design software, ensure those prompts are clear, detailed, and tailored to the desired outcome."}}];
+const DOT = `digraph G {
+    rankdir=TB;
+    node [style=filled, shape=circle, fontsize=14, width=0.6, height=0.6];
+    0 [label="0\\n(0.37)", fillcolor=orange, tooltip=" "];
+    1 [label="1\\n(0.28)", fillcolor=orange, tooltip=" "];
+    2 [label="2\\n(0.39)", fillcolor=orange, tooltip=" "];
+    3 [label="3\\n(0.28)", fillcolor=orange, tooltip=" "];
+    4 [label="4\\n(0.29)", fillcolor=orange, tooltip=" "];
+    5 [label="5\\n(0.41)", fillcolor=cyan, tooltip=" "];
+    0 -> 1;
+    0 -> 2;
+    1 -> 3;
+    1 -> 4;
+    2 -> 5;
+}`;
+
+const nodeMap = {};
+NODES.forEach(n => { nodeMap[n.idx] = n; });
+
+let pinnedIdx = null;   // non-null when tooltip is click-pinned (scrollable)
+let hoverIdx = null;    // non-null when hovering over a node
+
+function renderTooltip(idx) {
+  const n = nodeMap[idx];
+  if (!n) return "";
+  let roleBadge = "";
+  if (n.role === "Best") roleBadge = '<span class="role-badge role-best">BEST</span>';
+  else if (n.role === "Pareto Front") roleBadge = '<span class="role-badge role-pareto">PARETO</span>';
+  else if (n.role === "Seed") roleBadge = '<span class="role-badge role-seed">SEED</span>';
+
+  let comps = "";
+  for (const [name, text] of Object.entries(n.components)) {
+    const escaped = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    comps += '<div class="tt-comp-name">' + name + '</div><div class="tt-comp-text">' + escaped + '</div>';
+  }
+
+  return '<div class="tt-header">Candidate ' + n.idx + roleBadge + '</div>' +
+    '<div class="tt-meta">Score: <strong>' + n.score + '</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Parent(s): ' + n.parents +
+    '</div><div class="tt-hint">' + (pinnedIdx === idx ? 'Click node again to dismiss' : 'Click to pin &amp; scroll') + '</div>' +
+    comps;
+}
+
+function positionTooltip(x, y) {
+  const tt = document.getElementById("tooltip");
+  let tx = x + 16, ty = y + 16;
+  const r = tt.getBoundingClientRect();
+  if (tx + r.width > window.innerWidth - 8) tx = x - r.width - 16;
+  if (ty + r.height > window.innerHeight - 8) ty = y - r.height - 16;
+  if (tx < 8) tx = 8;
+  if (ty < 8) ty = 8;
+  tt.style.left = tx + "px";
+  tt.style.top = ty + "px";
+}
+
+function showTooltip(idx, x, y) {
+  const tt = document.getElementById("tooltip");
+  tt.innerHTML = renderTooltip(idx);
+  tt.style.display = "block";
+  positionTooltip(x, y);
+}
+
+function hideTooltip() {
+  pinnedIdx = null;
+  hoverIdx = null;
+  document.getElementById("tooltip").style.display = "none";
+}
+
+// Click outside tooltip and outside nodes dismisses pinned tooltip
+document.addEventListener("mousedown", function(e) {
+  const tt = document.getElementById("tooltip");
+  if (pinnedIdx !== null && tt.style.display === "block"
+      && !tt.contains(e.target) && !e.target.closest(".node")) {
+    hideTooltip();
+  }
+});
+
+async function render() {
+  const { instance } = await import("https://cdn.jsdelivr.net/npm/@viz-js/viz@3.11.0/lib/viz-standalone.mjs");
+  const viz = await instance();
+  const svg = viz.renderSVGElement(DOT);
+  const container = document.getElementById("graph-container");
+  container.innerHTML = "";
+  container.appendChild(svg);
+
+  // Attach hover listeners and strip native <title> tooltips to avoid double tooltips
+  svg.querySelectorAll(".node").forEach(node => {
+    const title = node.querySelector("title");
+    if (!title) return;
+    const idx = parseInt(title.textContent, 10);
+    if (isNaN(idx)) return;
+    title.remove();  // remove native SVG tooltip
+    node.style.cursor = "pointer";
+    // Hover: show tooltip following the mouse (non-interactive)
+    node.addEventListener("mouseenter", e => {
+      if (pinnedIdx !== null) return;  // don't override a pinned tooltip
+      hoverIdx = idx;
+      showTooltip(idx, e.clientX, e.clientY);
+    });
+    node.addEventListener("mousemove", e => {
+      if (pinnedIdx !== null || hoverIdx !== idx) return;
+      positionTooltip(e.clientX, e.clientY);
+    });
+    node.addEventListener("mouseleave", () => {
+      if (pinnedIdx !== null) return;
+      hoverIdx = null;
+      document.getElementById("tooltip").style.display = "none";
+    });
+    // Click: pin the tooltip so user can scroll it
+    node.addEventListener("click", e => {
+      e.stopPropagation();
+      if (pinnedIdx === idx) { hideTooltip(); return; }
+      pinnedIdx = idx;
+      showTooltip(idx, e.clientX, e.clientY);
+    });
+  });
+  // Also strip <title> from edges and the graph itself
+  svg.querySelectorAll(".edge title").forEach(t => t.remove());
+  const graphTitle = svg.querySelector(":scope > title");
+  if (graphTitle) graphTitle.remove();
+}
+
+render().catch(err => {
+  document.getElementById("graph-container").innerHTML =
+    "<p style='color:red'>Failed to render graph: " + err.message + "</p>" +
+    "<pre>" + DOT.replace(/</g,"&lt;") + "</pre>";
+});
+</script>
+</body>
+</html>
